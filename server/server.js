@@ -20,10 +20,9 @@ io.on('connection', (socket)=> {
 
   socket.broadcast.emit('newMessage', generateMessage('Admin', 'New user joined chat'));
 
-  socket.on('createMessage', (message) => {
-    console.log('create message:', message);
-
+  socket.on('createMessage', (message, callback) => {
     socket.broadcast.emit('newMessage', generateMessage(message.from, message.text));
+    callback();
   });
 
   socket.on('createLocationMessage', (locationMessage) => {
