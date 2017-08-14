@@ -37,22 +37,32 @@ io.on('connection', (socket)=> {
   });
 
   socket.on('createMessage', (message, callback) => {
-    socket.broadcast.emit('newMessage', generateMessage(message.from, message.text));
+    var user = users.getUser(socket.id);
+
+    if(user && isRealString(message.text)){
+      io.to(user.room).emit('newMessage', generateMessage(user.name, message.text));
+    }
+
     callback();
   });
 
   socket.on('createLocationMessage', (locationMessage) => {
-    socket.broadcast.emit('newLocationMessage', generateLocationMessage('Admin', locationMessage.latitude, locationMessage.longitude));
-  })
+    var user = users.getUser(socket.id);
 
-  socket.on('disconnect', () => {
-    var user = Users.removeUser(socket.id);
-
-    if(user) {
-      socket.broadcast.to(user.room).emit('updateUserList', Users.getUserList(user.room));
-      socket.broadcast.to(user.room).emit('newMessage', generateMessage('Admin', `${user.name} left chat`));
+    if(user){
+      io.to(user.room).emit('newLocationMessage', generateLocationMessage(user.name, locationMessage.latitude, locationMessage.longitude));
     };
 
+  });
+
+
+  socket.on('disconnect', () => {
+    var user = users.removeUser(socket.id);
+
+    if(user) {
+      socket.broadcast.to(user.room).emit('updateUserList', users.getUserList(user.room));
+      socket.broadcast.to(user.room).emit('newMessage', generateMessage('Admin', `${user.name} left chat`));
+    };
   });
 });
 
